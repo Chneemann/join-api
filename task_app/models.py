@@ -1,12 +1,17 @@
+import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+def generate_uuid_without_dashes():
+    return str(uuid.uuid4()).replace("-", "")
+
 class Task(models.Model):
+    id = models.CharField(primary_key=True, default=generate_uuid_without_dashes, max_length=32,editable=False, unique=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    category = models.CharField(max_length=50, choices=[('technical_task', 'Technical Task'), ('user_story', 'User Story')])
+    category = models.CharField(max_length=50, choices=[('Technical Task', 'Technical Task'), ('User Story', 'User Story')])
     priority = models.CharField(max_length=50, choices=[('low', 'Low'), ('medium', 'Medium'), ('urgent', 'Urgent')])
     status = models.CharField(max_length=50, choices=[('todo', 'Todo'), ('in_progress', 'In Progress'), ('await_feedback', 'Await feedback'), ('done', 'Done')])
     date = models.DateField()
