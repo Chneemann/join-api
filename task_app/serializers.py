@@ -12,9 +12,13 @@ class AssignedTaskSerializer(serializers.ModelSerializer):
         fields = ['id', 'task', 'user']
 
 class TaskSerializer(serializers.ModelSerializer):
-    subtasks = SubTaskSerializer(many=True, read_only=True)
-    assigned_users = AssignedTaskSerializer(many=True, read_only=True)
+    assignees = serializers.SerializerMethodField() 
+    subtasks = SubTaskSerializer(many=True, read_only=True) 
+
+    def get_assignees(self, obj):
+        return obj.assigned_users.all().values('id', 'user', 'task')  
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'category', 'priority', 'status', 'date', 'creator', 'created_at', 'subtasks', 'assigned_users']
+        fields = ['id', 'title', 'description', 'category', 'priority', 'status', 'date', 
+                  'creator', 'created_at', 'subtasks', 'assignees']
