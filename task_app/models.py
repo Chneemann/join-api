@@ -37,4 +37,4 @@ class AssignedTask(models.Model):
     user = models.ForeignKey(User, related_name="assigned_tasks", on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.user.username} assigned to {self.task.title}"
+        return f"{self.user.email} assigned to {self.task.title}"

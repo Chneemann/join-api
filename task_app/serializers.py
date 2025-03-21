@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from djangorestframework_camel_case.render import CamelCaseJSONRenderer
+from djangorestframework_camel_case.parser import CamelCaseJSONParser
 from .models import Task, SubTask, AssignedTask
 
 class SubTaskSerializer(serializers.ModelSerializer):
@@ -22,3 +24,6 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ['id', 'title', 'description', 'category', 'priority', 'status', 'date', 
                   'creator', 'created_at', 'subtasks', 'assignees']
+
+    renderer_classes = [CamelCaseJSONRenderer] 
+    parser_classes = [CamelCaseJSONParser]

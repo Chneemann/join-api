@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'djangorestframework_camel_case',
     'task_app',
     'user_app',
 ]
@@ -72,6 +73,15 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'join.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'djangorestframework_camel_case.parser.CamelCaseJSONParser',
+    ),
+}
 
 TEMPLATES = [
     {
