@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -13,7 +14,7 @@ class Task(models.Model):
     description = models.TextField(blank=True, null=True)
     category = models.CharField(max_length=50, choices=[('Technical Task', 'Technical Task'), ('User Story', 'User Story')])
     priority = models.CharField(max_length=50, choices=[('low', 'Low'), ('medium', 'Medium'), ('urgent', 'Urgent')])
-    status = models.CharField(max_length=50, choices=[('todo', 'Todo'), ('in_progress', 'In Progress'), ('await_feedback', 'Await feedback'), ('done', 'Done')])
+    status = models.CharField(max_length=50, choices=[('todo', 'Todo'), ('inprogress', 'In Progress'), ('awaitfeedback', 'Await feedback'), ('done', 'Done')])
     date = models.DateField()
     
     creator = models.ForeignKey(User, related_name="created_tasks", on_delete=models.CASCADE)
