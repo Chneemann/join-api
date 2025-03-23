@@ -6,7 +6,7 @@ from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'uId', 'first_name', 'last_name', 'email', 'phone', 'initials', 'color', 'status', 'last_login']
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'initials', 'color', 'status', 'last_login']
         
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer

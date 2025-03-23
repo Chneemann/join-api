@@ -7,6 +7,7 @@ class SubTaskInline(admin.TabularInline):
 
 class AssignedTaskInline(admin.TabularInline):
     model = AssignedTask
+    fields = ['user_id']
     extra = 1 
 
 @admin.register(Task)

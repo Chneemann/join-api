@@ -4,54 +4,48 @@ from rest_framework import status
 from .models import Task, SubTask, AssignedTask
 from .serializers import TaskSerializer, SubTaskSerializer, AssignedTaskSerializer
 from rest_framework.decorators import action
-from .caching import get_cached_tasks_by_status
+from .caching import get_cached_tasks, get_cached_task_by_id, get_cached_tasks_by_status
 from user_app.caching import get_cached_user
+from django.core.cache import cache
+from .choices import TaskStatus
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
-    def get_queryset(self):
-        status_param = self.request.query_params.get('status', None)
-
+    def list(self, request, *args, **kwargs):
+        status_param = request.query_params.get('status', None)
         if status_param:
             tasks = get_cached_tasks_by_status(status_param)
-            return tasks
-        return Task.objects.all()
+        else:
+            tasks = get_cached_tasks()
+        serializer = self.get_serializer(tasks, many=True)
+        return Response(serializer.data)
 
-    def get(self, request, status=None):
-        tasks = get_cached_tasks_by_status(status)
-        task_data = []
-
-        for task in tasks:
-            creator = get_cached_user(task['creator_id'])
-            assignees = [get_cached_user(assignee['user_id']) for assignee in task['assigned_users']] 
-
-            task_data.append({
-                'title': task['title'],
-                'description': task['description'],
-                'status': task['status'],
-                'creator': creator.first_name if creator else None,
-                'assignees': [assignee.first_name for assignee in assignees if assignee]
-            })
-        
-        return Response(task_data, status=status.HTTP_200_OK)
+    def retrieve(self, request, pk=None):
+        task = get_cached_task_by_id(pk)
+        serializer = self.get_serializer(task)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['put'])
     def update_status(self, request, pk=None):
         task = self.get_object()
-        status = request.data.get('status')
+        new_status = request.data.get('status')
 
-        if not status:
-            return Response({'status': 'failed', 'message': 'No status provided'}, status=400)
+        if not new_status:
+            return Response({'error': 'Status is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        valid_statuses = ['todo', 'inprogress', 'awaitfeedback', 'done']
-        if status not in valid_statuses:
-            return Response({'status': 'failed', 'message': f'Invalid status: {status}'}, status=400)
+        valid_statuses = [choice[0] for choice in TaskStatus.choices]
+        if new_status not in valid_statuses:
+            return Response({'error': f'Invalid status. Valid statuses: {valid_statuses}'}, status=status.HTTP_400_BAD_REQUEST)
 
-        task.status = status
+        cache.delete(f"task_{task.id}")
+        cache.delete(f"tasks_by_status_{task.status}")
+
+        task.status = new_status
         task.save()
-        return Response({'status': 'updated', 'task_id': task.id})
+        return Response({'status': 'Status updated.'})
 
 
 class SubTaskViewSet(viewsets.ModelViewSet):
