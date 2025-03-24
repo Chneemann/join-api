@@ -30,21 +30,13 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:4200',
-]
-
+# CORS settings
+CORS_ALLOWED_ORIGINS = ['http://localhost:4200']
 CORS_ALLOW_HEADERS = [
-    'content-type',
-    'accept',
-    'authorization',
-    'x-csrftoken',
-    'sentry-trace',
-    'baggage',
+    'content-type', 'accept', 'authorization', 'x-csrftoken', 'sentry-trace', 'baggage',
 ]
 
-# Application definition
-
+# Application config
 AUTH_USER_MODEL = 'user_app.User'
 
 INSTALLED_APPS = [
@@ -76,15 +68,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'join.urls'
 
-REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
-        'djangorestframework_camel_case.parser.CamelCaseJSONParser',
-    ),
-}
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -103,7 +86,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'join.wsgi.application'
 
-# Redis
+# Caching (Redis)
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -167,19 +151,25 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Auth
+# Authentication
 
-AUTH_USER_MODEL = 'user_app.User'
 AUTH_EMAIL_VERIFICATION = True
-
-# Rest Framework
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-}
 
 AUTHENTICATION_BACKENDS = (
     'auth_app.custom_backend.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+# REST Framework config
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+        'DEFAULT_RENDERER_CLASSES': (
+        'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'djangorestframework_camel_case.parser.CamelCaseJSONParser',
+    ),
+}

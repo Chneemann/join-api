@@ -11,14 +11,14 @@ class SubTaskSerializer(serializers.ModelSerializer):
 class AssignedTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssignedTask
-        fields = ['id', 'user_id']
+        fields = ['user_id']
 
 class TaskSerializer(serializers.ModelSerializer):
     assignees = serializers.SerializerMethodField() 
     subtasks = SubTaskSerializer(many=True, read_only=True) 
 
     def get_assignees(self, obj):
-        return obj.assigned_tasks.all().values('id', 'user_id')  
+        return obj.assigned_tasks.all().values('user_id')  
 
     class Meta:
         model = Task
