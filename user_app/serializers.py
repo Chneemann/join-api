@@ -11,5 +11,6 @@ class UserSerializer(serializers.ModelSerializer):
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
+    
     parser_classes = [CamelCaseJSONParser] 
     renderer_classes = [CamelCaseJSONRenderer] 

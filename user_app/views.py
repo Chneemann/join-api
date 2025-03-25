@@ -9,7 +9,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        user_id = kwargs.get("pk")
+        user_id = kwargs.get("pk") 
         cached_user = get_cached_user(user_id)
         
         if cached_user:
@@ -17,6 +17,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         user = self.get_object()
         serialized_user = UserSerializer(user).data
+        
         cache_user(user_id, serialized_user)
 
         return Response(serialized_user)
