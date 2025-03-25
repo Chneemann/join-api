@@ -5,12 +5,13 @@ from .models import Task, SubTask, AssignedTask
 from .serializers import TaskSerializer, SubTaskSerializer, AssignedTaskSerializer
 from rest_framework.decorators import action
 from .caching import get_cached_tasks, get_cached_task_by_id, get_cached_tasks_by_status
-from user_app.caching import get_cached_user
 from django.core.cache import cache
 from .choices import TaskStatus
-
+from rest_framework.permissions import IsAuthenticated
 
 class TaskViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
@@ -49,10 +50,14 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class SubTaskViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
 
 
 class AssignedTaskViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    
     queryset = AssignedTask.objects.all()
     serializer_class = AssignedTaskSerializer
