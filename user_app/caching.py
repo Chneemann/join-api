@@ -19,6 +19,7 @@ def get_cached_user(user_id):
     if user:
         user_data = serializers.serialize('json', [user])
         cache.set(cache_key, user_data, timeout=3600)
+
         return json.loads(user_data)[0]['fields']
     else:
         return None

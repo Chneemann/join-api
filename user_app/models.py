@@ -1,9 +1,6 @@
+import uuid
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from django.db import models
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
-from django.core.cache import cache
-import uuid
 
 def generate_uuid_without_dashes():
     return uuid.uuid4().hex
@@ -54,11 +51,3 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-    
-# Cache invalidation
-@receiver(post_save, sender=User)
-@receiver(post_delete, sender=User)
-def clear_user_cache(sender, instance, **kwargs):
-    """Invalidate cache for the affected user"""
-    cache_key = f"user_{instance.id}"
-    cache.delete(cache_key)
