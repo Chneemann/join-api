@@ -22,3 +22,12 @@ def get_cached_user(user_id):
         return json.loads(user_data)[0]['fields']
     else:
         return None
+
+
+def cache_user(user_id, user_data, timeout=3600):
+    """
+    Saves user data in the cache.
+    """
+    cache_key = f"user_{user_id}"
+    user_json = json.dumps(user_data) 
+    cache.set(cache_key, user_json, timeout)
