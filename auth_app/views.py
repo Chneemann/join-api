@@ -1,14 +1,12 @@
-from django.shortcuts import render, redirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, authentication
-from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from join.settings import TOKEN_EXPIRATION_TIME
 from .serializer import LoginSerializer
 from rest_framework.permissions import IsAuthenticated
-from django.db import models
 from django.utils import timezone
+from .models import ExpiringToken
 
 
 class LoginView(APIView):
@@ -73,14 +71,3 @@ class AuthView(APIView):
             return Response({"error": "Token expired, please log in again"}, status=status.HTTP_401_UNAUTHORIZED)
 
         return Response({"user_id": request.user.id}, status=status.HTTP_200_OK)
-
-class ExpiringToken(Token):
-    expires_at = models.DateTimeField(null=True, blank=True)
-
-    def is_expired(self):
-        return self.expires_at and self.expires_at < timezone.now()
-
-    def save(self, *args, **kwargs):
-        if not self.expires_at:
-            self.expires_at = timezone.now() + TOKEN_EXPIRATION_TIME
-        super().save(*args, **kwargs)
