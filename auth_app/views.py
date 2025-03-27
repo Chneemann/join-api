@@ -6,7 +6,7 @@ from join.settings import TOKEN_EXPIRATION_TIME
 from .serializer import LoginSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from .models import ExpiringToken
+from .models import ExpiringToken, ExpiringTokenAuthentication
 
 
 class LoginView(APIView):
@@ -42,18 +42,20 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
-    authentication_classes = [authentication.TokenAuthentication]
+    authentication_classes = [ExpiringTokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         token = getattr(request.user, 'auth_token', None)
 
-        if token is None:
-            return Response({"error": "No active session or token already expired"}, status=status.HTTP_400_BAD_REQUEST)
+        if token is None or not isinstance(token, ExpiringToken):
+            return Response({"detail": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
+        if token.is_expired():
+            return Response({"error": "No active session or token already expired"}, status=status.HTTP_401_UNAUTHORIZED)
         token.delete()
         return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
-
+    
 class AuthView(APIView):
     authentication_classes = [authentication.TokenAuthentication]
 

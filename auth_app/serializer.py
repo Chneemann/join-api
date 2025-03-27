@@ -1,8 +1,9 @@
 from rest_framework import serializers
+from django.core.validators import MinLengthValidator
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(validators=[MinLengthValidator(limit_value=8)])
 
     def validate(self, data):
         email = data.get('email')
