@@ -26,10 +26,31 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         task = get_cached_task_by_id(pk)
+        if not task:
+            return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(task)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['put'])
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            task = serializer.save()
+            cache.delete("tasks")
+            cache.delete(f"task_{task.id}")
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        try:
+            task = Task.objects.get(pk=pk)
+            task.delete()
+            cache.delete(f"task_{pk}")
+            cache.delete("tasks")
+            return Response({'message': 'Task deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+        except Task.DoesNotExist:
+            return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['patch']) 
     def update_status(self, request, pk=None):
         task = self.get_object()
         new_status = request.data.get('status')
@@ -43,12 +64,12 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         cache.delete(f"task_{task.id}")
         cache.delete(f"tasks_by_status_{task.status}")
+        cache.delete(f"tasks_by_status_{new_status}") 
 
         task.status = new_status
         task.save()
         return Response({'status': 'Status updated.'})
-
-
+    
 class SubTaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
