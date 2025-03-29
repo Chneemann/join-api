@@ -9,7 +9,7 @@ from rest_framework import status
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
-    queryset = User.objects.all()
+    queryset = User.objects.filter(is_active=True, is_superuser=False)
     serializer_class = UserSerializer
     
     def retrieve(self, request, pk=None):

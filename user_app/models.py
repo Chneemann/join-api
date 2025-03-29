@@ -35,7 +35,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, blank=True, null=True)
     initials = models.CharField(max_length=10, blank=True)
     color = models.CharField(max_length=20, blank=True)
-    status = models.BooleanField(default=True)
+    is_online = models.BooleanField(default=False)
+    is_contact_only = models.BooleanField(default=False)
     last_login = models.DateTimeField(blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
