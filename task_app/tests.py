@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
-from .models import Task
+from .models import Task, AssignedTask
 from .caching import get_cached_tasks, get_cached_tasks_by_status, get_cached_task_by_id
 from .choices import TaskStatus
 
@@ -52,16 +52,64 @@ class TaskCacheTests(TestCase):
         self.assertEqual(task, self.task1)
 
     def test_cache_invalidation_on_task_save(self):
+        cache.clear()
+
         get_cached_tasks()
         self.task1.status = TaskStatus.DONE
         self.task1.save()
+
         self.assertIsNone(cache.get("all_tasks"))
         self.assertIsNone(cache.get(f"tasks_by_status_{TaskStatus.TODO}"))
         self.assertIsNone(cache.get(f"task_{self.task1.id}"))
 
+        tasks = get_cached_tasks()
+        self.assertIn(self.task1, tasks)
+
     def test_cache_invalidation_on_task_delete(self):
+        cache.clear()
+
         get_cached_tasks()
         task_id = self.task1.id
         self.task1.delete()
+
         self.assertIsNone(cache.get("all_tasks"))
         self.assertIsNone(cache.get(f"task_{task_id}"))
+
+        tasks = get_cached_tasks()
+        self.assertNotIn(self.task1, tasks)
+
+    def test_cache_invalidation_on_assigned_task_save(self):
+        cache.clear()
+
+        AssignedTask.objects.create(user_id=self.user, task=self.task1)
+        
+        self.assertIsNone(cache.get("all_tasks"))
+        self.assertIsNone(cache.get(f"tasks_by_status_{self.task1.status}"))
+        self.assertIsNone(cache.get(f"task_{self.task1.id}"))
+
+        tasks = get_cached_tasks_by_status(self.task1.status)
+        self.assertIn(self.task1, tasks)
+
+    def test_cache_invalidation_on_assigned_task_delete(self):
+        cache.clear()
+
+        assigned_task = AssignedTask.objects.create(user_id=self.user, task=self.task1)
+
+        assigned_task.delete()
+        
+        self.assertIsNone(cache.get("all_tasks"))
+        self.assertIsNone(cache.get(f"tasks_by_status_{self.task1.status}"))
+        self.assertIsNone(cache.get(f"task_{self.task1.id}"))
+        
+        tasks = get_cached_tasks_by_status(self.task1.status)
+        self.assertIn(self.task1, tasks)
+
+    def test_cache_serialization_error_handling(self):
+        cache.set("task_corrupted", b"corrupted_data")
+
+        cache.delete("task_corrupted")
+
+        self.assertIsNone(cache.get("task_corrupted"))
+
+        task = get_cached_task_by_id(self.task1.id)
+        self.assertEqual(task, self.task1)
