@@ -46,9 +46,11 @@ class AssignedTask(models.Model):
 @receiver(post_delete, sender=Task)
 def clear_task_cache(sender, instance, **kwargs):
     """Invalidate cache for the affected task status and individual task"""
+    cache.delete("all_tasks")
+
     cache_key = f"tasks_by_status_{instance.status}"
     cache.delete(cache_key)
-    
+
     cache_key_task = f"task_{instance.id}"
     cache.delete(cache_key_task)
 
@@ -61,3 +63,5 @@ def clear_assigned_task_cache(sender, instance, **kwargs):
 
     cache_key_task = f"task_{instance.task.id}"
     cache.delete(cache_key_task)
+
+    cache.delete("all_tasks")
