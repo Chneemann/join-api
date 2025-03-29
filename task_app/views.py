@@ -4,7 +4,7 @@ from rest_framework import status
 from .models import Task, SubTask, AssignedTask
 from .serializers import TaskSerializer, SubTaskSerializer, AssignedTaskSerializer
 from rest_framework.decorators import action
-from .caching import get_cached_tasks, get_cached_task_by_id, get_cached_tasks_by_status
+from .caching import get_cached_task_by_id
 from django.core.cache import cache
 from .choices import TaskStatus
 from rest_framework.permissions import IsAuthenticated
@@ -14,15 +14,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-
-    def list(self, request, *args, **kwargs):
-        status_param = request.query_params.get('status', None)
-        if status_param:
-            tasks = get_cached_tasks_by_status(status_param)
-        else:
-            tasks = get_cached_tasks()
-        serializer = self.get_serializer(tasks, many=True)
-        return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
         task = get_cached_task_by_id(pk)
@@ -35,7 +26,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             task = serializer.save()
-            cache.delete("tasks")
             cache.delete(f"task_{task.id}")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -45,7 +35,6 @@ class TaskViewSet(viewsets.ModelViewSet):
             task = Task.objects.get(pk=pk)
             task.delete()
             cache.delete(f"task_{pk}")
-            cache.delete("tasks")
             return Response({'message': 'Task deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
         except Task.DoesNotExist:
             return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
@@ -63,13 +52,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'error': f'Invalid status. Valid statuses: {valid_statuses}'}, status=status.HTTP_400_BAD_REQUEST)
 
         cache.delete(f"task_{task.id}")
-        cache.delete(f"tasks_by_status_{task.status}")
-        cache.delete(f"tasks_by_status_{new_status}") 
 
         task.status = new_status
         task.save()
         return Response({'status': 'Status updated.'})
-    
+
 class SubTaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     

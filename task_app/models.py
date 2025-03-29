@@ -40,28 +40,3 @@ class AssignedTask(models.Model):
     
     def __str__(self):
         return f"{self.user_id} - {self.task}"
-
-# Cache invalidation
-@receiver(post_save, sender=Task)
-@receiver(post_delete, sender=Task)
-def clear_task_cache(sender, instance, **kwargs):
-    """Invalidate cache for the affected task status and individual task"""
-    cache.delete("all_tasks")
-
-    cache_key = f"tasks_by_status_{instance.status}"
-    cache.delete(cache_key)
-
-    cache_key_task = f"task_{instance.id}"
-    cache.delete(cache_key_task)
-
-@receiver(post_save, sender=AssignedTask)
-@receiver(post_delete, sender=AssignedTask)
-def clear_assigned_task_cache(sender, instance, **kwargs):
-    """Invalidate cache when a task assignment changes"""
-    cache_key = f"tasks_by_status_{instance.task.status}"
-    cache.delete(cache_key)
-
-    cache_key_task = f"task_{instance.task.id}"
-    cache.delete(cache_key_task)
-
-    cache.delete("all_tasks")

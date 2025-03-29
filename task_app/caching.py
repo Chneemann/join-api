@@ -4,18 +4,11 @@ from .models import Task
 
 CACHE_TIMEOUT = 3600
 
-def get_cached_tasks():
-    return _get_or_set_cache("all_tasks", Task.objects.all())
-
-def get_cached_tasks_by_status(status):
-    return _get_or_set_cache(f"tasks_by_status_{status}", Task.objects.filter(status=status))
-
 def get_cached_task_by_id(task_id):
     return _get_or_set_cache(f"task_{task_id}", Task.objects.filter(pk=task_id), single=True)
 
 def _get_or_set_cache(cache_key, queryset, single=False):
     cached_json = cache.get(cache_key)
-    
     if cached_json:
         try:
             deserialized = list(serializers.deserialize("json", cached_json))
