@@ -1,9 +1,12 @@
-import uuid
+import uuid, random
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from django.db import models
 
 def generate_uuid_without_dashes():
     return uuid.uuid4().hex
+
+def generate_random_color():
+    return "#" + "".join(random.choices("0123456789ABCDEF", k=6))
 
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, password=None):
@@ -34,7 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     initials = models.CharField(max_length=10, blank=True)
-    color = models.CharField(max_length=20, blank=True)
+    color = models.CharField(max_length=20, blank=True, default=generate_random_color)
     is_online = models.BooleanField(default=False)
     is_contact_only = models.BooleanField(default=False)
     last_login = models.DateTimeField(blank=True, null=True)
