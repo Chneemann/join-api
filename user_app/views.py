@@ -5,6 +5,7 @@ from .serializers import UserSerializer
 from .caching import get_cached_user_by_id
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from django.core.cache import cache
 
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -23,3 +24,9 @@ class UserViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.delete()
+        cache.delete(f"user_{user.id}")  
+        return Response({'message': 'User deleted successfully.'}, status=status.HTTP_200_OK)
