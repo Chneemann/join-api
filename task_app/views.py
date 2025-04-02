@@ -8,6 +8,8 @@ from .caching import get_cached_task_by_id
 from django.core.cache import cache
 from .choices import TaskStatus
 from rest_framework.permissions import IsAuthenticated
+from user_app.models import User
+from rest_framework.exceptions import APIException
 
 class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -24,12 +26,16 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            task = serializer.save()
-            cache.delete(f"task_{task.id}")
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        task = serializer.save()
+        self._assign_users_to_task(request.data.get('assigned', []), task)
+        self._create_subtasks(request.data.get('subtasks', []), task)
 
+        cache.delete(f"task_{task.id}")
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
     def destroy(self, request, pk=None):
         try:
             task = Task.objects.get(pk=pk)
@@ -38,7 +44,18 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Task deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
         except Task.DoesNotExist:
             return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+    def _assign_users_to_task(self, user_ids, task):
+        users = User.objects.filter(id__in=user_ids)
+        missing_users = set(user_ids) - set(users.values_list('id', flat=True))
+        
+        if missing_users:
+            raise APIException(f"Users not found: {', '.join(missing_users)}")
 
+        AssignedTask.objects.bulk_create(
+            [AssignedTask(user_id=user, task=task) for user in users]
+        )
+        
     @action(detail=True, methods=['patch']) 
     def update_status(self, request, pk=None):
         task = self.get_object()
@@ -69,3 +86,13 @@ class AssignedTaskViewSet(viewsets.ModelViewSet):
     
     queryset = AssignedTask.objects.all()
     serializer_class = AssignedTaskSerializer
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            assigned_task = serializer.save()
+            cache.delete(f"task_{assigned_task.task.id}")
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
