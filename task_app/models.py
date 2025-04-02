@@ -27,16 +27,17 @@ class Task(models.Model):
         return self.title
 
 class SubTask(models.Model):
-    task = models.ForeignKey(Task, related_name="subtasks", on_delete=models.CASCADE)
+    id = models.CharField(primary_key=True, default=generate_uuid_without_dashes, max_length=32, editable=False, unique=True)
+    task = models.ForeignKey(Task, related_name="subtasks_task", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    done = models.BooleanField(default=False)
+    status = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.task.title} - {self.title}"
 
 class AssignedTask(models.Model):
-    user_id = models.ForeignKey(User, related_name="assigned_tasks", on_delete=models.CASCADE)
-    task = models.ForeignKey(Task, related_name="assigned_tasks", on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, related_name="assigned_task", on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name="assigned_task", on_delete=models.CASCADE)
     
     def __str__(self):
         return f"{self.user_id} - {self.task}"

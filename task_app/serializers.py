@@ -6,7 +6,7 @@ from .models import Task, SubTask, AssignedTask
 class SubTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTask
-        fields = ['title', 'done']
+        fields = ['id', 'title', 'status']
 
 class AssignedTaskSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,10 +15,10 @@ class AssignedTaskSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     assignees = serializers.SerializerMethodField() 
-    subtasks = SubTaskSerializer(many=True, read_only=True) 
+    subtasks = SubTaskSerializer(many=True, read_only=True, source="subtasks_task") 
 
     def get_assignees(self, obj):
-        return obj.assigned_tasks.all().values('user_id')  
+        return obj.assigned_task.all().values('user_id')  
 
     class Meta:
         model = Task
