@@ -88,7 +88,32 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.status = new_status
         task.save()
         return Response({'status': 'Status updated.'})
-     
+    
+    @action(detail=True, methods=['patch'], url_path='update_subtask')
+    def update_subtask(self, request, pk=None):
+        task = self.get_object()
+        subtask_id = request.data.get("subtask_id") 
+        subtask_title = request.data.get("subtask_title")
+        subtask_status = request.data.get("subtask_status") 
+        
+        if not subtask_id:
+            return Response({"error": "Subtask ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        subtask = SubTask.objects.filter(task=task, id=subtask_id).first()
+        if not subtask:
+            return Response({"error": "Subtask not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        if subtask_status not in [True, False]:
+            return Response({'error': 'Invalid subtask status. It must be true or false.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if subtask_title:
+            subtask.title = subtask_title
+        if subtask_status not in [None]:
+            subtask.status = subtask_status
+        
+        subtask.save()
+        return Response(SubTaskSerializer(subtask).data, status=status.HTTP_200_OK)
+    
 class SubTaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = SubTask.objects.all()
