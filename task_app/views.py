@@ -31,13 +31,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         task = serializer.save()
         self._assign_users_to_task(request.data.get('assigned', []), task)
 
-        subtasks = [
-            {"title": title, "status": status}
-            for title, status in zip(request.data.get("subtasks_title", []), request.data.get("subtasks_status", []))
-        ]
+        subtasks_data = request.data.get("subtasks", [])
         
-        if subtasks:
-            self._create_subtasks(subtasks, task)
+        if subtasks_data:
+            self._create_subtasks(subtasks_data, task)
 
         cache.delete(f"task_{task.id}")
         
@@ -59,7 +56,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 for sub in subtask_data
             ]
             SubTask.objects.bulk_create(subtasks)
-
+            
     def _assign_users_to_task(self, user_ids, task):
         users = User.objects.filter(id__in=user_ids)
         missing_users = set(user_ids) - set(users.values_list('id', flat=True))
