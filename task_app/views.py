@@ -29,7 +29,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         task = serializer.save()
-        self._assign_users_to_task(request.data.get('assigned', []), task)
+        self._assign_users_to_task(request.data.get('assignees', []), task)
 
         subtasks_data = request.data.get("subtasks", [])
         
@@ -58,12 +58,14 @@ class TaskViewSet(viewsets.ModelViewSet):
             SubTask.objects.bulk_create(subtasks)
             
     def _assign_users_to_task(self, user_ids, task):
+        user_ids = [user["user_id"] for user in user_ids if "user_id" in user]
+
         users = User.objects.filter(id__in=user_ids)
-        missing_users = set(user_ids) - set(users.values_list('id', flat=True))
-        
+        found_user_ids = set(users.values_list('id', flat=True))
+        missing_users = set(user_ids) - found_user_ids
+
         if missing_users:
-            missing_users_list = list(map(str, missing_users))
-            raise APIException(f"Users not found: {', '.join(missing_users_list)}")
+            raise APIException(f"Users not found: {', '.join(missing_users)}")
 
         AssignedTask.objects.bulk_create(
             [AssignedTask(user_id=user, task=task) for user in users]
