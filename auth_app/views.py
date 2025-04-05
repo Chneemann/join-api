@@ -7,7 +7,10 @@ from .serializer import LoginSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from .models import ExpiringToken, ExpiringTokenAuthentication
+from django.contrib.auth import get_user_model
+from user_app.serializers import UserSerializer
 
+User = get_user_model()
 
 class LoginView(APIView):
     serializer_class = LoginSerializer
@@ -55,7 +58,25 @@ class LogoutView(APIView):
             return Response({"error": "No active session or token already expired"}, status=status.HTTP_401_UNAUTHORIZED)
         token.delete()
         return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
-    
+
+class RegisterView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'Email already exists'}, status=status.HTTP_409_CONFLICT)
+
+        serialized = UserSerializer(data=request.data)
+        if serialized.is_valid():
+            user = serialized.save()
+            user.set_password(password)
+            user.is_active = True
+            user.save()
+            return Response({'message': 'User created.'}, status=status.HTTP_201_CREATED)
+
+        return Response(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class AuthView(APIView):
     authentication_classes = [authentication.TokenAuthentication]
 
