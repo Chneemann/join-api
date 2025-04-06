@@ -42,7 +42,7 @@ class LoginView(APIView):
             if user:
                 if not user.is_active:
                     return Response({'error': 'Account is inactive, please check your mails'}, status=status.HTTP_403_FORBIDDEN)
-                return self.create_token_response(user)
+                return self._create_token_response(user)
             return Response({'error': 'Unable to login with provided credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
           
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
