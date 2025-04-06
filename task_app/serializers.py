@@ -18,7 +18,7 @@ class TaskSerializer(serializers.ModelSerializer):
     subtasks = SubTaskSerializer(many=True, read_only=True)
 
     def get_assignees(self, obj):
-        return obj.assigned_tasks.all().values('user_id') 
+        return list(obj.assigned_tasks.all().values('user_id'))
 
     class Meta:
         model = Task
