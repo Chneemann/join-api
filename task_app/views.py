@@ -1,4 +1,3 @@
-import uuid
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,11 +8,10 @@ from .caching import get_cached_task_by_id
 from django.core.cache import cache
 from .choices import TaskStatus
 from rest_framework.permissions import IsAuthenticated
-from user_app.models import User
-from rest_framework.exceptions import APIException
 from .services import create_or_update_subtasks, create_or_update_assignees, assign_users_to_task, create_subtasks
 
 class TaskViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 

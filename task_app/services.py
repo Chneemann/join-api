@@ -5,7 +5,7 @@ from user_app.models import User
 
 def create_or_update_subtasks(subtask_data, parent_task):
     current_subtasks = SubTask.objects.filter(task=parent_task)
-    current_subtask_ids = {str(sub.id): sub for sub in current_subtasks}  # Speichere Objekte zur einfachen Aktualisierung
+    current_subtask_ids = {str(sub.id): sub for sub in current_subtasks} 
 
     new_subtasks_to_create = []
     subtasks_to_update = []
@@ -58,9 +58,9 @@ def assign_users_to_task(user_ids, task):
     users = User.objects.filter(id__in=user_ids)
     found_user_ids = set(users.values_list('id', flat=True))
     missing_users = set(user_ids) - found_user_ids
-
+ 
     if missing_users:
-        raise APIException(f"Users not found: {', '.join(map(str, missing_users))}") # Konvertiere UUIDs zurück zu Strings für die Fehlermeldung
+        raise APIException(f"Users not found: {', '.join(map(str, missing_users))}") 
 
     AssignedTask.objects.bulk_create(
         [AssignedTask(user=user, task=task) for user in users]

@@ -1,9 +1,9 @@
 from django.test import TestCase
-from django.core.cache import cache
 from django.contrib.auth import get_user_model
-from .models import Task, AssignedTask
-from .caching import get_cached_task_by_id
-from .choices import TaskStatus, TaskCategory, TaskPriority
+from task_app.caching import get_cached_task_by_id
+from task_app.models import Task, AssignedTask
+from task_app.choices import TaskCategory, TaskPriority, TaskStatus
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -71,8 +71,8 @@ class TaskCacheTests(TestCase):
     def test_cache_invalidation_on_assigned_task_save(self):
         cache.clear()
 
-        AssignedTask.objects.create(user_id=self.user, task=self.task1)
-        
+        AssignedTask.objects.create(user=self.user, task=self.task1)
+
         self.assertIsNone(cache.get(f"task_{self.task1.id}"))
 
         task = get_cached_task_by_id(self.task1.id)
@@ -81,14 +81,14 @@ class TaskCacheTests(TestCase):
     def test_cache_invalidation_on_assigned_task_delete(self):
         cache.clear()
 
-        assigned_task = AssignedTask.objects.create(user_id=self.user, task=self.task1)
+        assigned_task = AssignedTask.objects.create(user=self.user, task=self.task1)
         assigned_task.delete()
 
         self.assertIsNone(cache.get(f"task_{self.task1.id}"))
 
         task = get_cached_task_by_id(self.task1.id)
         self.assertEqual(task, self.task1)
-
+        
     def test_cache_serialization_error_handling(self):
         cache.set("task_corrupted", b"corrupted_data")
         cache.delete("task_corrupted")
