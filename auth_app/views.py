@@ -28,6 +28,9 @@ class LoginView(APIView):
         if created or not token.expires_at:
             token.expires_at = timezone.now() + TOKEN_EXPIRATION_TIME
             token.save()
+            
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
 
         return Response({'token': token.key, 'user_id': user.id}, status=status.HTTP_200_OK)
     

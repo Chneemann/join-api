@@ -1,3 +1,4 @@
+import uuid
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,9 +11,9 @@ from .choices import TaskStatus
 from rest_framework.permissions import IsAuthenticated
 from user_app.models import User
 from rest_framework.exceptions import APIException
+from .services import create_or_update_subtasks, create_or_update_assignees, assign_users_to_task, create_subtasks
 
 class TaskViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
@@ -29,16 +30,33 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         task = serializer.save()
-        self._assign_users_to_task(request.data.get('assignees', []), task)
+        assign_users_to_task(request.data.get('assignees', []), task)
 
         subtasks_data = request.data.get("subtasks", [])
         
         if subtasks_data:
-            self._create_subtasks(subtasks_data, task)
+            create_subtasks(subtasks_data, task)
 
         cache.delete(f"task_{task.id}")
         
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        task = self.get_object()
+        serializer = self.get_serializer(task, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        task = serializer.save()
+
+        assignees_data = request.data.get('assignees', [])
+        create_or_update_assignees(assignees_data, task)
+
+        subtasks_data = request.data.get('subtasks', [])
+        create_or_update_subtasks(subtasks_data, task)
+
+        cache.delete(f"task_{task.id}")
+        return Response(serializer.data, status=status.HTTP_200_OK)
         
     def destroy(self, request, pk=None):
         try:
@@ -48,29 +66,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Task deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
         except Task.DoesNotExist:
             return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
-        
-    def _create_subtasks(self, subtask_data, parent_task):
-        if subtask_data:
-            subtasks = [
-                SubTask(title=sub['title'], status=sub['status'], task=parent_task)
-                for sub in subtask_data
-            ]
-            SubTask.objects.bulk_create(subtasks)
-            
-    def _assign_users_to_task(self, user_ids, task):
-        user_ids = [user["user_id"] for user in user_ids if "user_id" in user]
-
-        users = User.objects.filter(id__in=user_ids)
-        found_user_ids = set(users.values_list('id', flat=True))
-        missing_users = set(user_ids) - found_user_ids
-
-        if missing_users:
-            raise APIException(f"Users not found: {', '.join(missing_users)}")
-
-        AssignedTask.objects.bulk_create(
-            [AssignedTask(user_id=user, task=task) for user in users]
-        )
-        
+    
     @action(detail=True, methods=['patch']) 
     def update_status(self, request, pk=None):
         task = self.get_object()

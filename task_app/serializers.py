@@ -14,16 +14,16 @@ class AssignedTaskSerializer(serializers.ModelSerializer):
         fields = ['user_id']
 
 class TaskSerializer(serializers.ModelSerializer):
-    assignees = serializers.SerializerMethodField() 
-    subtasks = SubTaskSerializer(many=True, read_only=True, source="subtasks_task") 
+    assignees = serializers.SerializerMethodField()
+    subtasks = SubTaskSerializer(many=True, read_only=True)
 
     def get_assignees(self, obj):
-        return obj.assigned_task.all().values('user_id')  
+        return obj.assigned_tasks.all().values('user_id') 
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'category', 'priority', 'status', 'date', 
+        fields = ['id', 'title', 'description', 'category', 'priority', 'status', 'date',
                   'creator', 'created_at', 'subtasks', 'assignees']
 
-    renderer_classes = [CamelCaseJSONRenderer] 
+    renderer_classes = [CamelCaseJSONRenderer]
     parser_classes = [CamelCaseJSONParser]
