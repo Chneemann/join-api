@@ -13,7 +13,7 @@ class Task(models.Model):
     priority = models.CharField(max_length=50, choices=TaskPriority.choices)
     status = models.CharField(max_length=50, choices=TaskStatus.choices)
     date = models.DateField()
-    creator = models.ForeignKey(User, related_name="created_tasks", on_delete=models.CASCADE)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -29,8 +29,8 @@ class SubTask(models.Model):
         return f"{self.task.title} - {self.title}"
 
 class AssignedTask(models.Model):
-    user = models.ForeignKey(User, related_name="assigned_tasks", on_delete=models.CASCADE)
-    task = models.ForeignKey(Task, related_name="assigned_tasks", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name="assigned", on_delete=models.CASCADE)
     
     def __str__(self):
         return f"{self.user} - {self.task}"

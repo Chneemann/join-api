@@ -4,11 +4,9 @@ from djangorestframework_camel_case.parser import CamelCaseJSONParser
 from .models import Task, SubTask, AssignedTask
 
 class SubTaskSerializer(serializers.ModelSerializer):
-    task = serializers.CharField(source='task.id')
-
     class Meta:
         model = SubTask
-        fields = ['id', 'title', 'status', 'task']
+        fields = ['id', 'title', 'status']
 
 class AssignedTaskSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(source='user.id', read_only=True)
@@ -19,10 +17,8 @@ class AssignedTaskSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     subtasks = SubTaskSerializer(many=True, read_only=True)
-    assignees = AssignedTaskSerializer(source='assigned_tasks', many=True, read_only=True)
-
-    def get_assignees(self, obj):
-        return list(obj.assigned_tasks.all().values('user_id'))
+    assignees = AssignedTaskSerializer(source='assigned', many=True, read_only=True)
+    creator = serializers.CharField(source='creator.id', read_only=True)
 
     class Meta:
         model = Task
