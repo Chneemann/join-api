@@ -24,6 +24,7 @@ class SerializerTests(TestCase):
             date=self.test_date,
             creator=self.user
         )
+
         self.subtask1 = SubTask.objects.create(task=self.task, title='SubTask 1', status=True)
         self.subtask2 = SubTask.objects.create(task=self.task, title='SubTask 2', status=False)
         self.assigned_user = User.objects.create(email='assigned@example.com')
@@ -31,12 +32,12 @@ class SerializerTests(TestCase):
 
     def test_subtask_serializer(self):
         serializer = SubTaskSerializer(self.subtask1)
-        expected_data = {'id': str(self.subtask1.id), 'title': 'SubTask 1', 'status': True}
+        expected_data = {'id': str(self.subtask1.id), 'title': 'SubTask 1', 'status': True, 'task': str(self.task.id)}
         self.assertEqual(serializer.data, expected_data)
-
+        
     def test_assigned_task_serializer(self):
         serializer = AssignedTaskSerializer(self.assigned_task)
-        expected_data = {'user_id': self.assigned_user.id}
+        expected_data = {'user_id': str(self.assigned_user.id)}
         self.assertEqual(serializer.data, expected_data)
 
     def test_task_serializer(self):
@@ -52,13 +53,14 @@ class SerializerTests(TestCase):
             'creator': self.user.id,
             'created_at': self.task.created_at.isoformat().replace('+00:00', 'Z'),
             'subtasks': [
-                {'id': str(self.subtask1.id), 'title': 'SubTask 1', 'status': True},
-                {'id': str(self.subtask2.id), 'title': 'SubTask 2', 'status': False}
+                {'id': str(self.subtask1.id), 'title': 'SubTask 1', 'status': True, 'task': str(self.task.id)},
+                {'id': str(self.subtask2.id), 'title': 'SubTask 2', 'status': False, 'task': str(self.task.id)}
             ],
-            'assignees': [{'user_id': self.assigned_user.id}]
+            'assignees': [{'user_id': str(self.assigned_user.id)}]
         }
+        
         self.assertEqual(serializer.data, expected_data)
-
+        
     def test_task_serializer_create_validation(self):
         data = {
             'title': 'New Task',
