@@ -29,6 +29,6 @@ class ExpiringTokenAuthentication(TokenAuthentication):
 
         if token.is_expired():
             token.delete()
-            raise AuthenticationFailed({"error": "No active session or token already expired"})
+            raise AuthenticationFailed({"error": "Token expired."})
 
         return (token.user, token)

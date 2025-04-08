@@ -170,7 +170,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_TOKEN_MODEL = 'auth_app.ExpiringToken'
 
-TOKEN_EXPIRATION_TIME = timedelta(hours=4)
+TOKEN_EXPIRATION_TIME = timedelta(hours=24)
 
 # Authentication
 

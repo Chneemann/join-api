@@ -12,24 +12,23 @@ from user_app.serializers import UserSerializer
 from django.contrib.auth.tokens import default_token_generator
 from .services import create_password_reset_link, send_password_reset_email, verify_password_reset_token, set_user_password
 
-
 User = get_user_model()
 
 class LoginView(APIView):
     serializer_class = LoginSerializer
 
     def _create_token_response(self, user):
+        now = timezone.now()
         token, created = ExpiringToken.objects.get_or_create(user=user)
 
-        if not created and token.is_expired():
+        if token.is_expired():
             token.delete()
             token = ExpiringToken.objects.create(user=user)
 
-        if created or not token.expires_at:
-            token.expires_at = timezone.now() + TOKEN_EXPIRATION_TIME
-            token.save()
-            
-        user.last_login = timezone.now()
+        token.expires_at = now + TOKEN_EXPIRATION_TIME
+        token.save()
+
+        user.last_login = now
         user.save(update_fields=['last_login'])
 
         return Response({'token': token.key, 'user_id': user.id}, status=status.HTTP_200_OK)
