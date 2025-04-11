@@ -17,31 +17,40 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         task = get_cached_task_by_id(pk)
+        serializer = self.get_serializer(task)
+        
         if not task:
             return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(task)
+
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        task = serializer.save()
-        assign_users_to_task(request.data.get('assignees', []), task)
+
+        try:
+            task = serializer.save()
+        except Exception as e:
+            return Response({"error": f"Task creation failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        assignees_data = request.data.get('assignees', [])
+        if assignees_data:
+            assign_users_to_task(assignees_data, task)
 
         subtasks_data = request.data.get("subtasks", [])
-        
         if subtasks_data:
             create_subtasks(subtasks_data, task)
 
         cache.delete(f"task_{task.id}")
-        
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     def update(self, request, *args, **kwargs):
         task = self.get_object()
         serializer = self.get_serializer(task, data=request.data, partial=True)
+
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
