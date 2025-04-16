@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
-from .models import Task, SubTask, AssignedTask
+from .models import Task, SubTask, AssignedTask, TaskStatus
 
 class SubTaskSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,7 +27,3 @@ class TaskSerializer(serializers.ModelSerializer):
 
     renderer_classes = [CamelCaseJSONRenderer]
     parser_classes = [CamelCaseJSONParser]
-    
-    def create(self, validated_data):
-        validated_data['creator'] = self.context['request'].user
-        return super().create(validated_data)

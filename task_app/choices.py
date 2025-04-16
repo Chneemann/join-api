@@ -12,6 +12,6 @@ class TaskPriority(models.TextChoices):
 
 class TaskStatus(models.TextChoices):
     TODO = 'todo', _('Todo')
-    IN_PROGRESS = 'inprogress', _('In Progress')
-    AWAIT_FEEDBACK = 'awaitfeedback', _('Await feedback')
+    IN_PROGRESS = 'inProgress', _('In Progress')
+    AWAIT_FEEDBACK = 'awaitFeedback', _('Await feedback')
     DONE = 'done', _('Done')
