@@ -17,7 +17,7 @@ def create_password_reset_link(request, user, token):
 def send_password_reset_email(user, token, reset_link):
     """Sends the password reset e-mail."""
     subject = 'Password Reset Request'
-    message = render_to_string('emails/password_reset_email.html', {
+    message = render_to_string('password_reset_email.html', {
         'first_name': user.first_name,
         'last_name': user.last_name,
         'token': token,

@@ -105,7 +105,7 @@ class PasswordResetView(APIView):
 class PasswordResetConfirmView(APIView):
     def post(self, request):
         password = request.data.get('password')
-        uidb64 = request.data.get('uid')
+        uidb64 = request.data.get('uidb_64')
         token = request.data.get('token')
 
         if not password or not uidb64 or not token:
